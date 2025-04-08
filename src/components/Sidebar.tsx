@@ -1,26 +1,29 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  MessageSquare, 
-  Code, 
-  PieChart, 
-  FileText, 
-  LayoutDashboard,
-  Workflow,
-  FileCode,
-  Server
-} from 'lucide-react';
-import { 
+import {
   Sidebar as SidebarComponent,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarFooter,
   SidebarMenu,
+  SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarGroup,
+  SidebarGroupLabel
 } from '@/components/ui/sidebar';
+import {
+  LayoutDashboard,
+  FileText,
+  Settings,
+  LineChart,
+  Database,
+  PieChart,
+  LogOut,
+  FilePlus,
+  Users
+} from 'lucide-react';
+import Logo from './Logo';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -28,45 +31,115 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   const location = useLocation();
-  const currentPath = location.pathname;
+  const pathname = location.pathname;
   
-  const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Project Workspace', path: '/dashboard/projects', icon: Workflow },
-    { name: 'Prompt Summary', path: '/dashboard/prompts', icon: MessageSquare },
-    { name: 'Infrastructure Code', path: '/dashboard/infra', icon: Code },
-    { name: 'Architecture Diagram', path: '/dashboard/architecture', icon: Server },
-    { name: 'FinOps Report', path: '/dashboard/finops', icon: PieChart },
-    { name: 'Documentation', path: '/dashboard/docs', icon: FileText },
-    { name: 'Deployment Logs', path: '/dashboard/logs', icon: FileCode }
-  ];
+  const isActive = (path: string) => {
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
 
   return (
-    <SidebarComponent className={`transition-all duration-300 ${isOpen ? 'w-64' : 'w-0'}`}>
-      <SidebarContent className="p-0">
+    <SidebarComponent>
+      <SidebarHeader>
+        <div className="flex items-center gap-2 p-2">
+          <Logo />
+          <span className="font-bold text-lg">DevOpsGenie</span>
+        </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 pt-4">Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton asChild>
-                    <Link 
-                      to={item.path} 
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-md ${
-                        currentPath === item.path ? 'bg-devopsgenie-primary text-white' : 'hover:bg-gray-100'
-                      }`}
-                    >
-                      <item.icon size={18} />
-                      <span>{item.name}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive('/dashboard')}>
+                <Link to="/dashboard">
+                  <LayoutDashboard />
+                  <span>Dashboard</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive('/dashboard/projects')}>
+                <Link to="/dashboard/projects">
+                  <FilePlus />
+                  <span>Projects</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive('/dashboard/analytics')}>
+                <Link to="/dashboard/analytics">
+                  <PieChart />
+                  <span>Analytics</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive('/dashboard/infrastructure')}>
+                <Link to="/dashboard/infrastructure">
+                  <Database />
+                  <span>Infrastructure</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive('/dashboard/finops')}>
+                <Link to="/dashboard/finops">
+                  <LineChart />
+                  <span>FinOps</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive('/dashboard/documentation')}>
+                <Link to="/dashboard/documentation">
+                  <FileText />
+                  <span>Documentation</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Account</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive('/dashboard/team')}>
+                <Link to="/dashboard/team">
+                  <Users />
+                  <span>Team</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive('/dashboard/settings')}>
+                <Link to="/dashboard/settings">
+                  <Settings />
+                  <span>Settings</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      
+      <SidebarFooter>
+        <div className="p-2">
+          <SidebarMenuButton asChild>
+            <Link to="/login" className="text-red-500 hover:text-red-700">
+              <LogOut />
+              <span>Logout</span>
+            </Link>
+          </SidebarMenuButton>
+        </div>
+      </SidebarFooter>
     </SidebarComponent>
   );
 };
