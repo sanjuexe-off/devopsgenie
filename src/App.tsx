@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,40 +27,42 @@ import NotFoundPage from "./pages/NotFoundPage";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Main layout routes */}
-          <Route element={<MainLayout />}>
-            <Route path="/" element={<LandingPage />} />
-          </Route>
-          
-          {/* Authentication routes (no layout) */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          
-          {/* Dashboard layout routes */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="projects" element={<DashboardPage />} />
-            <Route path="project/:projectId" element={<ProjectWorkspace />} />
-            <Route path="prompts" element={<PromptSummaryPage />} />
-            <Route path="infra" element={<InfrastructureCodePage />} />
-            <Route path="architecture" element={<ArchitectureDiagramPage />} />
-            <Route path="finops" element={<FinOpsReportPage />} />
-            <Route path="docs" element={<DocumentationPage />} />
-            <Route path="logs" element={<DeploymentLogsPage />} />
-          </Route>
-          
-          {/* 404 route */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Main layout routes */}
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<LandingPage />} />
+            </Route>
+            
+            {/* Authentication routes (no layout) */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            
+            {/* Dashboard layout routes */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="projects" element={<DashboardPage />} />
+              <Route path="project/:projectId" element={<ProjectWorkspace />} />
+              <Route path="prompts" element={<PromptSummaryPage />} />
+              <Route path="infra" element={<InfrastructureCodePage />} />
+              <Route path="architecture" element={<ArchitectureDiagramPage />} />
+              <Route path="finops" element={<FinOpsReportPage />} />
+              <Route path="docs" element={<DocumentationPage />} />
+              <Route path="logs" element={<DeploymentLogsPage />} />
+            </Route>
+            
+            {/* 404 route */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
 
 export default App;
