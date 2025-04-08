@@ -39,9 +39,11 @@ const Header: React.FC<HeaderProps> = ({ isDashboard = false, onMenuClick }) => 
             <NavigationMenu className="hidden md:flex">
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link to="/">Home</Link>
-                  </NavigationMenuLink>
+                  <Link to="/" legacyBehavior passHref>
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Home
+                    </NavigationMenuLink>
+                  </Link>
                 </NavigationMenuItem>
                 
                 <NavigationMenuItem>
@@ -99,15 +101,19 @@ const Header: React.FC<HeaderProps> = ({ isDashboard = false, onMenuClick }) => 
                 </NavigationMenuItem>
                 
                 <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link to="/">Pricing</Link>
-                  </NavigationMenuLink>
+                  <Link to="/" legacyBehavior passHref>
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Pricing
+                    </NavigationMenuLink>
+                  </Link>
                 </NavigationMenuItem>
                 
                 <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link to="/">Documentation</Link>
-                  </NavigationMenuLink>
+                  <Link to="/" legacyBehavior passHref>
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Documentation
+                    </NavigationMenuLink>
+                  </Link>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
