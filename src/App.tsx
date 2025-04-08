@@ -13,6 +13,12 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import LandingPage from "./pages/LandingPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProjectWorkspace from "./pages/ProjectWorkspace";
+import PromptSummaryPage from "./pages/PromptSummaryPage";
+import InfrastructureCodePage from "./pages/InfrastructureCodePage";
+import ArchitectureDiagramPage from "./pages/ArchitectureDiagramPage";
+import FinOpsReportPage from "./pages/FinOpsReportPage";
+import DocumentationPage from "./pages/DocumentationPage";
+import DeploymentLogsPage from "./pages/DeploymentLogsPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -38,8 +44,14 @@ const App = () => (
           {/* Dashboard layout routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardPage />} />
+            <Route path="projects" element={<DashboardPage />} />
             <Route path="project/:projectId" element={<ProjectWorkspace />} />
-            {/* Add more dashboard routes here as needed */}
+            <Route path="prompts" element={<PromptSummaryPage />} />
+            <Route path="infra" element={<InfrastructureCodePage />} />
+            <Route path="architecture" element={<ArchitectureDiagramPage />} />
+            <Route path="finops" element={<FinOpsReportPage />} />
+            <Route path="docs" element={<DocumentationPage />} />
+            <Route path="logs" element={<DeploymentLogsPage />} />
           </Route>
           
           {/* 404 route */}
