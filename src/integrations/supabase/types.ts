@@ -9,7 +9,110 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      generations: {
+        Row: {
+          architecture_diagram: string | null
+          cost_estimate: Json | null
+          created_at: string
+          documentation: string | null
+          id: string
+          infrastructure_code: string | null
+          project_id: string
+          prompt: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          architecture_diagram?: string | null
+          cost_estimate?: Json | null
+          created_at?: string
+          documentation?: string | null
+          id?: string
+          infrastructure_code?: string | null
+          project_id: string
+          prompt: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          architecture_diagram?: string | null
+          cost_estimate?: Json | null
+          created_at?: string
+          documentation?: string | null
+          id?: string
+          infrastructure_code?: string | null
+          project_id?: string
+          prompt?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
