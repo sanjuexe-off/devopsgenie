@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import ProjectChat from '@/components/project/ProjectChat';
 import FileExplorer from '@/components/project/FileExplorer';
 import ProjectPrompt from '@/components/project/ProjectPrompt';
@@ -11,6 +13,9 @@ import ProjectSummary from '@/components/project/ProjectSummary';
 
 const ProjectWorkspace: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   
   const folderStructure = {
     'infra': [
@@ -41,17 +46,84 @@ const ProjectWorkspace: React.FC = () => {
   const initialMessages = [
     {
       role: 'system' as const,
-      content: `Welcome to Project ${projectId}! How can I help you with your deployment strategy today?`
+      content: project ? `Welcome to Project ${project.name}! How can I help you with your deployment strategy today?` : 
+        `Welcome to this project! How can I help you with your deployment strategy today?`
     }
   ];
+
+  useEffect(() => {
+    fetchProjectData();
+  }, [projectId]);
+
+  const fetchProjectData = async () => {
+    try {
+      setLoading(true);
+      
+      if (!projectId) {
+        toast({
+          title: "Error",
+          description: "Project ID is missing",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+      if (error) throw error;
+      
+      setProject(data);
+    } catch (error) {
+      console.error('Error fetching project data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load project data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefreshProject = async () => {
+    setRefreshing(true);
+    await fetchProjectData();
+    setRefreshing(false);
+    toast({
+      title: "Success",
+      description: "Project data refreshed",
+    });
+  };
+
+  const handlePromptUpdate = (newPrompt: string) => {
+    // Update the local state with the new prompt
+    setProject((prev: any) => ({
+      ...prev,
+      description: newPrompt
+    }));
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">Loading project data...</div>;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-devopsgenie-text">Project Workspace</h1>
-        <Button className="bg-devopsgenie-primary hover:bg-opacity-90">
+        <h1 className="text-2xl font-bold text-devopsgenie-text">
+          {project?.name || "Project Workspace"}
+        </h1>
+        <Button 
+          className="bg-devopsgenie-primary hover:bg-opacity-90" 
+          onClick={handleRefreshProject}
+          disabled={refreshing}
+        >
           <RefreshCw className="w-4 h-4 mr-2" />
-          Update Project
+          {refreshing ? "Refreshing..." : "Update Project"}
         </Button>
       </div>
 
@@ -72,19 +144,22 @@ const ProjectWorkspace: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="prompt">
-          <ProjectPrompt currentPrompt="Create a microservice architecture for an e-commerce platform with autoscaling and CI/CD." />
+          <ProjectPrompt 
+            currentPrompt={project?.description || "No prompt available"} 
+            onPromptUpdate={handlePromptUpdate}
+          />
         </TabsContent>
         
         <TabsContent value="summary">
           <ProjectSummary 
-            name="E-commerce Platform" 
-            createdAt="April 5, 2025" 
-            updatedAt="April 8, 2025" 
-            status="Completed" 
+            name={project?.name || "Unnamed Project"} 
+            createdAt={project?.created_at ? new Date(project.created_at).toLocaleDateString() : "Unknown"} 
+            updatedAt={project?.updated_at ? new Date(project.updated_at).toLocaleDateString() : "Unknown"} 
+            status={project?.status || "In Progress"} 
             resourceCount={12} 
             estimatedCost="$450/month" 
             cloudProvider="AWS" 
-            description="This project implements a microservice architecture for an e-commerce platform with autoscaling capabilities and a robust CI/CD pipeline. The infrastructure includes containerized microservices, a message queue for asynchronous processing, and a CDN for static assets." 
+            description={project?.description || "No description available"} 
           />
         </TabsContent>
       </Tabs>

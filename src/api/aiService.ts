@@ -1,4 +1,3 @@
-
 export interface GenerationRequest {
   prompt: string;
   projectId?: string;
@@ -83,16 +82,22 @@ export const regeneratePart = async (
   }
 };
 
+import { supabase } from '@/integrations/supabase/client';
+
 // Send a message to the AI about a specific project
 export const sendAiMessage = async (projectId: string, message: string): Promise<{
   message: string;
   response: string;
 }> => {
   try {
-    return await fetchWithAuth(`/ai/chat/${projectId}`, {
-      method: 'POST',
-      body: JSON.stringify({ message }),
+    // Use Supabase Edge Function instead of direct API call
+    const { data, error } = await supabase.functions.invoke('ai-chat', {
+      body: { projectId, message }
     });
+    
+    if (error) throw error;
+    
+    return data;
   } catch (error) {
     console.error(`Error sending AI message for project ${projectId}:`, error);
     throw error;

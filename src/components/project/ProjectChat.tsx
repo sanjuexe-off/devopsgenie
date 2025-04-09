@@ -1,9 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { sendAiMessage } from '@/api/aiService'; 
 
 interface Message {
   role: 'user' | 'system';
@@ -18,30 +21,67 @@ interface ProjectChatProps {
 const ProjectChat: React.FC<ProjectChatProps> = ({ initialMessages, projectId }) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [promptInput, setPromptInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!promptInput.trim()) return;
+    if (!promptInput.trim() || isLoading) return;
 
-    const newMessage = {
+    const userMessage = {
       role: 'user' as const,
       content: promptInput
     };
 
-    setMessages(prev => [...prev, newMessage]);
-    
-    // Simulate AI response
-    setTimeout(() => {
+    // Add the user message to the chat
+    setMessages(prev => [...prev, userMessage]);
+    setPromptInput('');
+    setIsLoading(true);
+
+    try {
+      if (!projectId) {
+        throw new Error("Project ID is required");
+      }
+      
+      // Send the message to the AI service
+      const response = await sendAiMessage(projectId, promptInput);
+      
+      // Add the AI response to the chat
       setMessages(prev => [
         ...prev, 
         {
           role: 'system',
-          content: `I've processed your request: "${promptInput}". What specific aspect of your deployment strategy would you like to explore further?`
+          content: response.response
         }
       ]);
-    }, 1000);
-    
-    setPromptInput('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      // Add a fallback response if the API call fails
+      setMessages(prev => [
+        ...prev, 
+        {
+          role: 'system',
+          content: "I'm sorry, I couldn't process your request at this time. Please try again later."
+        }
+      ]);
+      
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -63,6 +103,7 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ initialMessages, projectId })
               {message.content}
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
         
         <form onSubmit={handleSendMessage} className="flex gap-2">
@@ -71,10 +112,15 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ initialMessages, projectId })
             onChange={(e) => setPromptInput(e.target.value)}
             placeholder="Ask about your deployment strategy..."
             className="flex-1"
+            disabled={isLoading}
           />
-          <Button type="submit" className="bg-devopsgenie-primary hover:bg-opacity-90">
+          <Button 
+            type="submit" 
+            className="bg-devopsgenie-primary hover:bg-opacity-90"
+            disabled={isLoading}
+          >
             <Send className="w-4 h-4 mr-2" />
-            Send
+            {isLoading ? "Sending..." : "Send"}
           </Button>
         </form>
       </CardContent>
