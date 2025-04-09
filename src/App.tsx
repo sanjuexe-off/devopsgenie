@@ -29,10 +29,10 @@ const queryClient = new QueryClient();
 const App = () => (
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <BrowserRouter>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
           <Routes>
             {/* Main layout routes */}
             <Route element={<MainLayout />}>
@@ -59,8 +59,8 @@ const App = () => (
             {/* 404 route */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>
 );
