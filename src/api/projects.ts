@@ -6,6 +6,7 @@ export interface Project {
   status: 'In Progress' | 'Completed' | 'Failed';
   createdAt: string;
   updatedAt: string;
+  ai_provider?: string;
 }
 
 interface CreateProjectData {

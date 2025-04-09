@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,6 +19,7 @@ interface Project {
   created_at: string;
   updated_at: string;
   ai_provider: string | null;
+  owner_id: string;
 }
 
 const ProjectWorkspace: React.FC = () => {
