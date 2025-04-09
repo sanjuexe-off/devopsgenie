@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { generateDeploymentStrategy } from '@/api/aiService';
 
 interface CreateProjectModalProps {
   children: React.ReactNode;
@@ -43,7 +42,13 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ children, onPro
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        throw new Error("User not authenticated");
+        toast({
+          title: "Error",
+          description: "You must be logged in to create a project",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
       }
 
       // Insert a new project
@@ -53,7 +58,8 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ children, onPro
           name,
           description,
           owner_id: user.id,
-          ai_provider: aiProvider
+          ai_provider: aiProvider,
+          status: 'In Progress'
         })
         .select()
         .single();
@@ -74,17 +80,6 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ children, onPro
           .upload(`${projectId}/${folder}/.gitkeep`, new Blob([''], { type: 'text/plain' }));
       }
 
-      // Try to initiate an AI generation for the project
-      try {
-        await generateDeploymentStrategy({
-          prompt: description,
-          projectId: projectId
-        });
-      } catch (genError) {
-        console.error("Error starting generation:", genError);
-        // Continue even if generation fails
-      }
-
       // Close the modal and reset fields
       setOpen(false);
       setName('');
@@ -102,11 +97,11 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ children, onPro
       if (onProjectCreated) {
         onProjectCreated();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating project:', error);
       toast({
         title: "Error",
-        description: "Failed to create project",
+        description: error.message || "Failed to create project",
         variant: "destructive",
       });
     } finally {

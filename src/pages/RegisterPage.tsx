@@ -1,14 +1,89 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import Logo from '@/components/Logo';
+import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const RegisterPage: React.FC = () => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords don't match",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!acceptTerms) {
+      toast({
+        title: "Error",
+        description: "Please accept the terms and conditions",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Account created successfully. Please verify your email.",
+      });
+      
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-devopsgenie-background-alt p-4">
       <Card className="w-full max-w-md">
@@ -20,32 +95,65 @@ const RegisterPage: React.FC = () => {
           <CardDescription>Enter your information to get started with DevOpsGenie</CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={handleRegister}>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First name</Label>
-                  <Input id="firstName" required />
+                  <Input 
+                    id="firstName" 
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last name</Label>
-                  <Input id="lastName" required />
+                  <Input 
+                    id="lastName" 
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required 
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="your.email@example.com" required />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="your.email@example.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" required />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input id="confirmPassword" type="password" required />
+                <Input 
+                  id="confirmPassword" 
+                  type="password" 
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required 
+                />
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="terms" />
+                <Checkbox 
+                  id="terms" 
+                  checked={acceptTerms}
+                  onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                />
                 <label
                   htmlFor="terms"
                   className="text-sm text-devopsgenie-text-secondary leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -61,8 +169,12 @@ const RegisterPage: React.FC = () => {
                   .
                 </label>
               </div>
-              <Button type="submit" className="w-full bg-devopsgenie-primary hover:bg-opacity-90">
-                Create Account
+              <Button 
+                type="submit" 
+                className="w-full bg-devopsgenie-primary hover:bg-opacity-90"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating Account..." : "Create Account"}
               </Button>
             </div>
           </form>
@@ -77,10 +189,10 @@ const RegisterPage: React.FC = () => {
           </div>
           
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" type="button" disabled={isLoading}>
               Google
             </Button>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" type="button" disabled={isLoading}>
               GitHub
             </Button>
           </div>
