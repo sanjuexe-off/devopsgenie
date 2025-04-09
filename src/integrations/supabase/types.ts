@@ -85,6 +85,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          ai_provider: string | null
           created_at: string
           description: string | null
           id: string
@@ -94,6 +95,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_provider?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -103,6 +105,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_provider?: string | null
           created_at?: string
           description?: string | null
           id?: string

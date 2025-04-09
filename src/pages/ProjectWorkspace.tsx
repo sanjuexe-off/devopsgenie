@@ -10,38 +10,26 @@ import ProjectChat from '@/components/project/ProjectChat';
 import FileExplorer from '@/components/project/FileExplorer';
 import ProjectPrompt from '@/components/project/ProjectPrompt';
 import ProjectSummary from '@/components/project/ProjectSummary';
+import { getProjectAISettings } from '@/api/aiService';
+
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  ai_provider: string | null;
+}
 
 const ProjectWorkspace: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const [project, setProject] = useState<any>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
-  const folderStructure = {
-    'infra': [
-      'main.tf',
-      'variables.tf',
-      'outputs.tf',
-      'modules/',
-      'environments/'
-    ],
-    'diagrams': [
-      'architecture.png',
-      'network.png',
-      'data-flow.png'
-    ],
-    'docs': [
-      'README.md',
-      'deployment-guide.md',
-      'monitoring.md',
-      'scaling.md'
-    ],
-    'finops': [
-      'cost-estimate.json',
-      'optimization-report.md',
-      'forecast.csv'
-    ]
-  };
+  const [resourceCount, setResourceCount] = useState<number>(0);
+  const [estimatedCost, setEstimatedCost] = useState<string>('$0/month');
+  const [cloudProvider, setCloudProvider] = useState<string>('AWS');
   
   const initialMessages = [
     {
@@ -52,7 +40,10 @@ const ProjectWorkspace: React.FC = () => {
   ];
 
   useEffect(() => {
-    fetchProjectData();
+    if (projectId) {
+      fetchProjectData();
+      countResources();
+    }
   }, [projectId]);
 
   const fetchProjectData = async () => {
@@ -77,6 +68,13 @@ const ProjectWorkspace: React.FC = () => {
       if (error) throw error;
       
       setProject(data);
+
+      // Get AI settings
+      const settings = await getProjectAISettings(projectId);
+      if (data.ai_provider !== settings.provider) {
+        // Update our local copy if there's a mismatch
+        setProject({ ...data, ai_provider: settings.provider });
+      }
     } catch (error) {
       console.error('Error fetching project data:', error);
       toast({
@@ -89,9 +87,37 @@ const ProjectWorkspace: React.FC = () => {
     }
   };
 
+  const countResources = async () => {
+    try {
+      if (!projectId) return;
+      
+      // Count files as "resources"
+      const { data, error } = await supabase
+        .storage
+        .from('project_files')
+        .list(projectId);
+
+      if (error) throw error;
+      
+      const count = data?.length || 0;
+      setResourceCount(count);
+      
+      // Set a fake estimated cost based on resource count
+      const estimatedMonthlyCost = Math.max(100, count * 50);
+      setEstimatedCost(`$${estimatedMonthlyCost}/month`);
+      
+      // Randomly select a cloud provider for demo purposes
+      const providers = ['AWS', 'Azure', 'GCP', 'Multi-cloud'];
+      setCloudProvider(providers[Math.floor(Math.random() * providers.length)]);
+    } catch (error) {
+      console.error('Error counting resources:', error);
+    }
+  };
+
   const handleRefreshProject = async () => {
     setRefreshing(true);
     await fetchProjectData();
+    await countResources();
     setRefreshing(false);
     toast({
       title: "Success",
@@ -101,10 +127,12 @@ const ProjectWorkspace: React.FC = () => {
 
   const handlePromptUpdate = (newPrompt: string) => {
     // Update the local state with the new prompt
-    setProject((prev: any) => ({
-      ...prev,
-      description: newPrompt
-    }));
+    if (project) {
+      setProject({
+        ...project,
+        description: newPrompt
+      });
+    }
   };
 
   if (loading) {
@@ -122,7 +150,7 @@ const ProjectWorkspace: React.FC = () => {
           onClick={handleRefreshProject}
           disabled={refreshing}
         >
-          <RefreshCw className="w-4 h-4 mr-2" />
+          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? "Refreshing..." : "Update Project"}
         </Button>
       </div>
@@ -140,7 +168,7 @@ const ProjectWorkspace: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="files">
-          <FileExplorer folderStructure={folderStructure} />
+          <FileExplorer />
         </TabsContent>
         
         <TabsContent value="prompt">
@@ -156,9 +184,9 @@ const ProjectWorkspace: React.FC = () => {
             createdAt={project?.created_at ? new Date(project.created_at).toLocaleDateString() : "Unknown"} 
             updatedAt={project?.updated_at ? new Date(project.updated_at).toLocaleDateString() : "Unknown"} 
             status={project?.status || "In Progress"} 
-            resourceCount={12} 
-            estimatedCost="$450/month" 
-            cloudProvider="AWS" 
+            resourceCount={resourceCount} 
+            estimatedCost={estimatedCost} 
+            cloudProvider={cloudProvider} 
             description={project?.description || "No description available"} 
           />
         </TabsContent>

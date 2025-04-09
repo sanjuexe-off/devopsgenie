@@ -1,3 +1,4 @@
+
 export interface GenerationRequest {
   prompt: string;
   projectId?: string;
@@ -13,6 +14,18 @@ export interface GenerationResponse {
     costEstimate?: object;
   };
   error?: string;
+}
+
+export interface AIChatRequest {
+  message: string;
+  projectId: string;
+  provider?: 'openai' | 'anthropic';
+  model?: string;
+}
+
+export interface AIChatResponse {
+  message: string;
+  response: string;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.devopsgenie.example';
@@ -85,21 +98,54 @@ export const regeneratePart = async (
 import { supabase } from '@/integrations/supabase/client';
 
 // Send a message to the AI about a specific project
-export const sendAiMessage = async (projectId: string, message: string): Promise<{
-  message: string;
-  response: string;
-}> => {
+export const sendAiMessage = async (request: AIChatRequest): Promise<AIChatResponse> => {
   try {
     // Use Supabase Edge Function instead of direct API call
     const { data, error } = await supabase.functions.invoke('ai-chat', {
-      body: { projectId, message }
+      body: request
     });
     
     if (error) throw error;
     
     return data;
   } catch (error) {
-    console.error(`Error sending AI message for project ${projectId}:`, error);
+    console.error(`Error sending AI message for project ${request.projectId}:`, error);
+    throw error;
+  }
+};
+
+// Get the currently selected AI provider and model for a project
+export const getProjectAISettings = async (projectId: string): Promise<{ provider: string; model?: string }> => {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('ai_provider')
+      .eq('id', projectId)
+      .single();
+    
+    if (error) throw error;
+    
+    return { 
+      provider: data.ai_provider || 'openai',
+      model: undefined // Default to the model selection in the edge function
+    };
+  } catch (error) {
+    console.error(`Error getting AI settings for project ${projectId}:`, error);
+    return { provider: 'openai' };
+  }
+};
+
+// Update the AI provider for a project
+export const updateProjectAIProvider = async (projectId: string, provider: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('projects')
+      .update({ ai_provider: provider })
+      .eq('id', projectId);
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error(`Error updating AI provider for project ${projectId}:`, error);
     throw error;
   }
 };
